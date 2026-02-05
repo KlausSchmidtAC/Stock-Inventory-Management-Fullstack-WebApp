@@ -10,49 +10,36 @@ Der Kunde verkauft elektronische Produkte, die in Kategorien organisiert sind. M
 
 ### ✅ Ihre Aufgabe
 
+> **Zeitansatz:** ca. 4 Stunden
+
 #### **Teil 1: Design & Planung**
 
-* Erstellen Sie ein **vereinfachtes ERM-Diagramm** mit folgenden Entities:
-
-  * `User`
-  * `Role`
-  * `Product`
-  * `Category`
-
+* Erstellen Sie ein **fokussiertes ERM-Diagramm** für die Inventory Domain:
+  * Entities: `Product`, `Category`, `Stock` (oder Bestands-Attribut) & Rollenbezug.
 * Planen Sie Ihre **Laravel Actions** und **Livewire Components**:
-
-  * Fokus auf CRUD für `Product` und `Category`
-  * Authentifizierte User können je nach Rolle unterschiedliche Aktionen ausführen
-
-* Notieren Sie Architekturüberlegungen **in einem kurzen Textdokument** (max. 1 Seite)
+  * Fokus auf CRUD für `Product` und eine Logik zur **Bestandsanpassung** (Stock Adjustment).
+  * Rollenkonzept: Admin (Vollzugriff) vs. Staff (eingeschränkt).
 
 ---
 
 #### **Teil 2: Implementation**
 
-* Implementieren Sie die Logik ausschließlich mit **[`lorisleiva/laravel-actions`](https://www.laravelactions.com/2.x/basic-usage.html#running-as-an-object)**.
+* Implementieren Sie die Logik mit **[`lorisleiva/laravel-actions`](https://www.laravelactions.com/2.x/basic-usage.html#running-as-an-object)**.
 * Die Benutzeroberfläche (UI) soll mit **Laravel Livewire** umgesetzt werden.
 
-* Implementieren Sie die folgenden **Funktionalitäten**:
-
-  * CRUD für `Product` und `Category` (In Livewire Components)
-  * Zugriffskontrolle (z. B. nur Admin darf Produkte erstellen) unter Verwendung von Policies/Actions
-  * Validierung innerhalb der Actions
-
-* Verwenden Sie eine saubere **Fehlerbehandlung** und User-Feedback in der UI
-
-* Schreiben Sie **Tests für die Actions** (Unit/Feature Tests)
-
-* Dokumentieren Sie die Architektur grob:
-
-  * Kurze Beschreibung, wie Actions und Livewire zusammenspielen.
+* Implementieren Sie die folgenden Anforderungen:
+  * **Product Management**: CRUD-Funktionalität für Produkte.
+  * **Stock Adjustment**: Eine Action zur Bestandsänderung (z. B. Wareneingang/-ausgang) mit Validierung (kein negativer Bestand).
+  * **Robustheit**: Einsatz von Database Transactions für Bestandsänderungen und Policy-basierten Zugriffsschutz.
+* Verwenden Sie sauberes User-Feedback und Fehlerbehandlung in der UI.
+* Schreiben Sie **Unit/Feature Tests** für die Bestandslogik (Edge-Cases berücksichtigen).
 
 ---
 
 ### 🧹 Optional (falls noch Zeit bleibt)
 
-* `InventoryTransaction`-Modell zur Nachverfolgung von Produktmengen
-* Ein zusätzlicher Filter für Produkte in der Livewire-Übersicht
+* `InventoryTransaction`-Modell zur detaillierten Historisierung
+* Kurze schriftliche Begründung für das "Laravel Actions" Pattern (Skalierbarkeit)
 * Dark Mode Support für die UI
 
 ---
@@ -69,6 +56,6 @@ Der Kunde verkauft elektronische Produkte, die in Kategorien organisiert sind. M
 
 ### 🎯 Ziel
 
-> **Liefern Sie eine kleine, wartbare Laravel-Applikation mit Fokus auf Codequalität, Struktur und der Nutzung von Laravel Actions sowie Livewire.** Umfang und Tiefe sind bewusst begrenzt – Qualität vor Vollständigkeit.
+> **Liefern Sie eine kleine, wartbare Laravel-Applikation mit Fokus auf Codequalität und Struktur. Die Bearbeitungszeit sollte ca. 4 Stunden betragen.** Qualität vor Vollständigkeit.
 
 Viel Erfolg! 🍀

@@ -10,49 +10,36 @@ The client sells electronic products organized into categories. Employees have d
 
 ### ✅ Your Task
 
+> **Estimated Time:** approx. 4 hours
+
 #### **Part 1: Design & Planning**
 
-* Create a **simplified ERM diagram** with the following entities:
-
-  * `User`
-  * `Role`
-  * `Product`
-  * `Category`
-
+* Create a **focused ERM diagram** for the Inventory Domain:
+  * Entities: `Product`, `Category`, `Stock` (or stock attribute) & Role context.
 * Plan your **Laravel Actions** and **Livewire Components**:
-
-  * Focus on CRUD for `Product` and `Category`
-  * Authenticated users can perform different actions depending on their role
-
-* Note your architectural considerations **in a short text document** (max. 1 page)
+  * Focus on CRUD for `Product` and logic for **Stock Adjustment**.
+  * Role concept: Admin (Full access) vs. Staff (restricted).
 
 ---
 
 #### **Part 2: Implementation**
 
-* Implement the logic exclusively using **[`lorisleiva/laravel-actions`](https://www.laravelactions.com/2.x/basic-usage.html#running-as-an-object)**.
+* Implement the logic using **[`lorisleiva/laravel-actions`](https://www.laravelactions.com/2.x/basic-usage.html#running-as-an-object)**.
 * The user interface (UI) should be implemented with **Laravel Livewire**.
 
-* Implement the following **functionalities**:
-
-  * CRUD for `Product` and `Category` (In Livewire Components)
-  * Access control (e.g., only Admin can create products) using Policies/Actions
-  * Validation within the Actions
-
-* Use clean **error handling** and user feedback in the UI
-
-* Write **tests for the Actions** (Unit/Feature Tests)
-
-* Briefly document the architecture:
-
-  * Short description of how Actions and Livewire work together.
+* Implement the following requirements:
+  * **Product Management**: CRUD functionality for products.
+  * **Stock Adjustment**: An Action to modify stock levels (e.g., stock in/out) with validation (prevent negative stock).
+  * **Robustness**: Use Database Transactions for stock changes and Policy-based authorization.
+* Use clean user feedback and error handling in the UI.
+* Write **Unit/Feature Tests** for the stock logic (considering edge cases).
 
 ---
 
 ### 🧹 Optional (if time permits)
 
-* `InventoryTransaction` model for tracking product quantities
-* An additional filter for products in the Livewire overview
+* `InventoryTransaction` model for detailed history tracking
+* Brief written justification for the "Laravel Actions" pattern (scalability)
 * Dark Mode support for the UI
 
 ---
@@ -69,6 +56,6 @@ The client sells electronic products organized into categories. Employees have d
 
 ### 🎯 Goal
 
-> **Deliver a small, maintainable Laravel application with a focus on code quality, structure, and the use of Laravel Actions and Livewire.** Scope and depth are deliberately limited – quality over completeness.
+> **Deliver a small, maintainable Laravel application with a focus on code quality and structure. The estimated time should be around 4 hours.** Quality over completeness.
 
 Good luck! 🍀

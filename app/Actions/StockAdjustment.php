@@ -1,0 +1,91 @@
+<?php
+ 
+namespace App\Actions;
+
+use App\Models\User;
+use App\Models\Product;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Lorisleiva\Actions\Concerns\AsAction;
+
+class StockAdjustment{
+    use AsAction; 
+
+     public function handleIfProdExists(array $StockAdjustmentInfo): ?Product
+    {
+        $productId = $StockAdjustmentInfo['product_id'];
+        $productName = $StockAdjustmentInfo['product_name'];
+        $product = Product::findOrFail($productId);
+
+        if($product === null) {
+            return null; // Product not found, do not update
+        }
+        else if($product->name !== $productName) {
+            return null; // Product name does not match, do not update
+        }
+        return $product; 
+    }
+
+
+    public function handleIfStockNegative(Product $product, array $StockAdjustmentInfo): bool
+    {
+        $adjustment = $StockAdjustmentInfo['adjustment'];
+    
+        // Adjust stock count
+        $newCount = $product->count + $adjustment;
+
+        // Ensure stock count does not go negative
+        if($newCount < 0) {
+            return false; // Invalid adjustment leading to negative stock
+        }
+
+        $product->count = $newCount;
+        $product->save();
+
+        return true;
+    }
+
+    public function asController(Request $request): JsonResponse
+    {
+        // Validate input
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'product_name' => 'required|string',
+            'adjustment' => 'required|integer',
+        ]);
+
+        $prodInfo = [
+            'product_id' => $validated['product_id'],
+            'adjustment' => $validated['adjustment'],
+            'product_name' => $validated['product_name']
+        ];
+
+        // Use database transaction for data consistency
+        try {
+            DB::beginTransaction();
+
+            $prod = $this->handleIfProdExists($prodInfo);
+            if (!$prod) {
+                DB::rollBack();
+                return response()->json(['message' => 'Stock adjustment failed. Check if product ID and name exists in stock.'], 400);
+            }
+
+            // Check authorization - both admin/manager and staff can adjust stock
+            Gate::authorize('adjustStock', $prod);
+
+            if (!$this->handleIfStockNegative($prod, $prodInfo)) {
+                DB::rollBack();
+                return response()->json(['message' => 'Stock adjustment failed. Adjustment leads to negative stock.'], 400);
+            }
+            DB::commit();
+            $prod_fresh=$prod->fresh();
+            return response()->json($prod_fresh, 200);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Stock adjustment failed: ' . $e->getMessage()], 500);
+        }
+    }
+}

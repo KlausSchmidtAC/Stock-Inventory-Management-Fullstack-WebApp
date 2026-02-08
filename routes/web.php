@@ -10,14 +10,34 @@ use App\Actions\GetOutOfStockProducts;
 use App\Actions\CreateProduct;
 use App\Actions\UpdateProduct;
 use App\Actions\DeleteProduct;
+use App\Actions\DeleteCategory;
 use App\Actions\StockAdjustment;
+use App\Livewire\Auth\Login;
+use App\Livewire\Dashboard;
 
 // ============================================
-// WELCOME PAGE
+// WELCOME PAGE And Authentication Routes
 // ============================================
-Route::get('/', function () {
-    return view('welcome');
-});
+
+// Route for Guests (Not logged in) - Livewire Component
+Route::get('/', Login::class)
+    ->middleware('guest')
+    ->name('login');
+
+// Route for Logout
+Route::post('/logout', function (Request $request) {
+    Auth::logout();                           // User ausloggen
+    $request->session()->invalidate();        // Session löschen
+    $request->session()->regenerateToken();   // CSRF-Token erneuern
+    
+    return redirect('/');
+})->middleware('auth')->name('logout');
+
+// Route for Dashboard (logged in users) - Livewire Component
+Route::get('/dashboard', Dashboard::class)
+    ->middleware('auth')
+    ->name('dashboard');
+
 
 // ============================================
 // PRODUCTION ROUTES (with Authentication)
@@ -36,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/products', CreateProduct::class);
         Route::put('/products/{id}', UpdateProduct::class)->whereNumber('id');
         Route::delete('/products/{id}', DeleteProduct::class)->whereNumber('id');
+        Route::delete('/categories/{id}', DeleteCategory::class)->whereNumber('id');
     });
 });
 

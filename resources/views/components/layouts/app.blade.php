@@ -7,12 +7,18 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased">
-    <div class="min-h-screen bg-gray-100">
-        <!-- Optional: Add a simple navigation here if needed -->
-        
-        <main class="py-10">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                {{ $slot }}
+    <!-- App Header mit Titel rechts oben -->
+    <div class="app-header">
+        <h1 class="app-title">TechGear Inventory-Manager</h1>
+    </div>
+
+    <!-- Main Content mit Padding -->
+    <div class="app-container">
+        <main>
+            <div class="max-w-7xl mx-auto">
+                <div class="content-wrapper p-6">
+                    {{ $slot }}
+                </div>
             </div>
         </main>
     </div>

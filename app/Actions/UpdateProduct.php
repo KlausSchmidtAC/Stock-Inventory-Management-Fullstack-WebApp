@@ -20,7 +20,14 @@ class UpdateProduct
 
     public function asController(Request $request, int $id): JsonResponse
     {
-        $product = Product::findOrFail($id);
+        $product = Product::find($id);
+        
+        if (!$product) {
+            return response()->json([
+                'error' => 'Produkt nicht gefunden.',
+                'message' => 'Das Produkt mit der ID ' . $id . ' existiert nicht.'
+            ], 404);
+        }
 
         // Check authorization - only admin/manager can update
         Gate::authorize('update', $product);

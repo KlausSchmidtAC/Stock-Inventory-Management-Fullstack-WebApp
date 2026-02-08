@@ -32,7 +32,9 @@ class Category extends Model
      */
     public function productsWithLowStock(): HasMany
     {
-        return $this->hasMany(Product::class)->where('count', '<', 10);
+        return $this->hasMany(Product::class)
+            ->where('count', '>', 0)
+            ->where('count', '<', 10);
     }
 
     /**
@@ -40,6 +42,6 @@ class Category extends Model
      */
     public function productsOutOfStock(): HasMany
     {
-        return $this->hasMany(Product::class)->where('count', 0);
+        return $this->hasMany(Product::class)->where('count', '<=', 0);
     }
 }

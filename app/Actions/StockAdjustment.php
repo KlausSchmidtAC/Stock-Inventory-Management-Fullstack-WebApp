@@ -16,17 +16,29 @@ class StockAdjustment{
      public function handleIfProdExists(array $StockAdjustmentInfo): ?Product
     {
         $productId = $StockAdjustmentInfo['product_id'];
-        $productName = $StockAdjustmentInfo['product_name'];
-        $product = Product::findOrFail($productId);
-
-        if($product === null) {
+        try {
+            $product = Product::findOrFail($productId);
+            return $product;
+        } catch (\Exception $e) {
             return null; // Product not found, do not update
         }
-        else if($product->name !== $productName) {
+    }
+
+     public function handleIfProdNamComplies(Product $product, array $StockAdjustmentInfo): ?Product
+    {
+      
+        $productId = $StockAdjustmentInfo['product_id'];
+        $productName = $StockAdjustmentInfo['product_name'];
+    
+        if($product->name !== $productName) {
             return null; // Product name does not match, do not update
         }
         return $product; 
     }
+
+
+
+
 
 
     public function handleIfStockNegative(Product $product, array $StockAdjustmentInfo): bool
@@ -44,6 +56,21 @@ class StockAdjustment{
         $product->count = $newCount;
         $product->save();
 
+        return true;
+    }
+
+    public function handleIfStockFull(Product $product, array $StockAdjustmentInfo): bool
+    {
+        $adjustment = $StockAdjustmentInfo['adjustment'];
+        
+        // Calculate new stock count
+        $newCount = $product->count + $adjustment;
+        
+        // Ensure stock count does not exceed 100
+        if($newCount > 100) {
+            return false; // Invalid adjustment leading to stock exceeding limit
+        }
+        
         return true;
     }
 
@@ -69,11 +96,23 @@ class StockAdjustment{
             $prod = $this->handleIfProdExists($prodInfo);
             if (!$prod) {
                 DB::rollBack();
-                return response()->json(['message' => 'Stock adjustment failed. Check if product ID and name exists in stock.'], 400);
+                return response()->json(['message' => 'Stock adjustment failed. Product ID does not exist in stock.'], 400);
+            }
+
+            // Prüfe ob Produktname übereinstimmt
+            $prod = $this->handleIfProdNamComplies($prod, $prodInfo);
+            if (!$prod) {
+                DB::rollBack();
+                return response()->json(['message' => 'Stock adjustment failed. Product name does not match.'], 400);
             }
 
             // Check authorization - both admin/manager and staff can adjust stock
             Gate::authorize('adjustStock', $prod);
+
+            if (!$this->handleIfStockFull($prod, $prodInfo)) {
+                DB::rollBack();
+                return response()->json(['message' => 'Stock adjustment failed. Maximum stock limit of 100 would be exceeded.'], 400);
+            }
 
             if (!$this->handleIfStockNegative($prod, $prodInfo)) {
                 DB::rollBack();

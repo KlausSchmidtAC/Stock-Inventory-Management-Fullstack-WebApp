@@ -15,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'test.admin' => \App\Http\Middleware\AutoLoginAsAdmin::class,
         ]);
-        
+
+        // Redirect for unauthenticated users to the login page
+        $middleware->redirectGuestsTo('/'); 
+
         // Exclude test routes from CSRF protection
         $middleware->validateCsrfTokens(except: [
             'test/*',

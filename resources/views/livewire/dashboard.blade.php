@@ -199,6 +199,32 @@
                                         placeholder="z.B. 10"
                                     >
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Lieferant</label>
+                                    <input 
+                                        wire:model="supplier"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. TechSupply GmbH"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Hersteller</label>
+                                    <input 
+                                        wire:model="manufacturer"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. Dell"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
+                                    <input 
+                                        wire:model="ISBN"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. 978-3-16-148410-0"
+                                    >
                             </div>
                         @endif
 
@@ -295,6 +321,33 @@
                                         type="text" 
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 2"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Lieferant</label>
+                                    <input 
+                                        wire:model="supplier"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. TechSupply GmbH"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Hersteller</label>
+                                    <input 
+                                        wire:model="manufacturer"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. Dell"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Neue ISBN</label>
+                                    <input 
+                                        wire:model="ISBN"
+                                        type="text" 
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        placeholder="z.B. 978-3-16-148410-0"
                                     >
                                 </div>
                             </div>

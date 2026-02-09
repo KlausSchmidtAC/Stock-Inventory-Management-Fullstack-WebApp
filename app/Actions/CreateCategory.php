@@ -19,14 +19,19 @@ class CreateCategory
     public function handle(array $data): Category
     {
         // Prüfe ob eine Kategorie mit gleichem Namen bereits existiert
+
+        $validated = validator($data, [
+        'name' => 'required|string|max:255',
+        ])->validate();
+
+
+        Gate::authorize('create', Category::class);
         $existingCategory = Category::where('name', $data['name'])->first();
         if ($existingCategory) {
             throw new \Exception('Eine Kategorie mit dem Namen "' . $data['name'] . '" existiert bereits (ID: ' . $existingCategory->id . ').');
         }
         
-        return Category::create([
-            'name' => $data['name'],
-        ]);
+        return Category::create($validated);
     }
 
     /**

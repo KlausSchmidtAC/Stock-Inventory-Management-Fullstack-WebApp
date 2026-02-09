@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class StockAdjustment{
@@ -72,6 +73,40 @@ class StockAdjustment{
         }
         
         return true;
+    }
+
+    public function handle(array $data): Product
+    {
+        // Validate input
+        Validator::validate($data, [
+            'product_id' => 'required|integer',
+            'product_name' => 'required|string',
+        ]);
+
+        // Prüfe ob Produkt existiert
+        $prod = $this->handleIfProdExists($data);
+        if (!$prod) {
+            throw new \Exception('Produkt mit ID ' . $data['product_id'] . ' nicht gefunden.');
+        }
+
+        // Prüfe ob Produktname übereinstimmt
+        $prod = $this->handleIfProdNamComplies($prod, $data);
+        if (!$prod) {
+            throw new \Exception('Eingegebener Produktname "' . $data['product_name'] . '" stimmt nicht mit dem gespeicherten Produktnamen überein.');
+        }
+
+        // Prüfe ob Bestand 100 nicht überschreitet
+        if (!$this->handleIfStockFull($prod, $data)) {
+            $neuerBestand = $prod->count + $data['adjustment'];
+            throw new \Exception('Bestandsanpassung würde die Obergrenze von 100 überschreiten. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment'] . ', Neuer Bestand wäre: ' . $neuerBestand);
+        }
+
+        // Prüfe ob Bestand nicht negativ wird
+        if (!$this->handleIfStockNegative($prod, $data)) {
+            throw new \Exception('Bestandsanpassung würde zu einem negativen Bestand führen. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment']);
+        }
+
+        return $prod->fresh();
     }
 
     public function asController(Request $request): JsonResponse

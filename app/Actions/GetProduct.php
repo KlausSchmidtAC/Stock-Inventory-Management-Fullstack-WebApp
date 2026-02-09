@@ -5,58 +5,67 @@ namespace App\Actions;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Lorisleiva\Actions\Concerns\AsAction;
+use \Illuminate\Http\Request; 
 
 class GetProduct
 {
     use AsAction;
 
-    public function handle(int $productId): JsonResponse
+    public function handle($productId): Product
     {
-        $product = Product::with('category')->find($productId);
+        // Validierung
+        $validated = validator(['productId' => $productId], [
+            'productId' => 'required|integer',
+        ])->validate();
+
+        $product = Product::with('category')->find($validated['productId']);
         
         if (!$product) {
-            return response()->json([
-                'error' => 'Produkt nicht gefunden.',
-                'message' => 'Das Produkt mit der ID ' . $productId . ' existiert nicht.'
-            ], 404);
+            throw new \Exception('Das Produkt mit der ID ' . $validated['productId'] . ' existiert nicht.');
         }
 
-        return response()->json($product);
+        return $product;
     }
     
-    public function handleByName(string $productName): JsonResponse
+    public function handleByName($productName): Product
     {
-        $product = Product::with('category')->where('name', $productName)->first();
+        // Validierung
+        $validated = validator(['productName' => $productName], [
+            'productName' => 'required|string',
+        ])->validate();
+
+        $product = Product::with('category')->where('name', $validated['productName'])->first();
         
         if (!$product) {
-            return response()->json([
-                'error' => 'Produkt nicht gefunden.',
-                'message' => 'Das Produkt mit dem Namen "' . $productName . '" existiert nicht.'
-            ], 404);
+            throw new \Exception('Das Produkt mit dem Namen "' . $validated['productName'] . '" existiert nicht.');
         }
 
-        return response()->json($product);
+        return $product;
     }
     
-    public function handleByIdAndName(int $productId, string $productName): JsonResponse
+    public function handleByIdAndName($productId, $productName): Product
     {
+        // Validierung
+        $validated = validator(['productId' => $productId, 'productName' => $productName], [
+            'productId' => 'required|integer',
+            'productName' => 'required|string',
+        ])->validate();
+
         $product = Product::with('category')
-            ->where('id', $productId)
-            ->where('name', $productName)
+            ->where('id', $validated['productId'])
+            ->where('name', $validated['productName'])
             ->first();
         
         if (!$product) {
-            return response()->json([
-                'error' => 'Produkt nicht gefunden.',
-                'message' => 'Produkt-ID "' . $productId . '" und Produktname "' . $productName . '" gehören nicht zum selben Produkt oder das Produkt existiert nicht.'
-            ], 404);
+            throw new \Exception('Produkt-ID "' . $validated['productId'] . '" und Produktname "' . $validated['productName'] . '" gehören nicht zum selben Produkt oder das Produkt existiert nicht.');
         }
 
-        return response()->json($product);
+        return $product;
     }
 
-    public function asController(int $id): JsonResponse
+    public function asController(Request $request, int $id): JsonResponse
     {
-        return $this->handle($id);
+        $product = $this->handle($id);
+        return response()->json($product);
     }
 }

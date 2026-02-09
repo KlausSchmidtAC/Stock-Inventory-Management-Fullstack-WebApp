@@ -13,8 +13,8 @@ use App\Actions\CreateCategory;
 use App\Actions\UpdateProduct;
 use App\Actions\DeleteProduct;
 use App\Actions\DeleteCategory;
+use App\Actions\GetCategories;
 use App\Actions\StockAdjustment;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use App\Models\Product;
 use App\Models\Category;
@@ -35,7 +35,10 @@ class Dashboard extends Component
     public $categoryIdForCreate = '';
     public $stockQuantity = '';
     public $adjustment = '';
-    
+    public $ISBN = '';
+    public $supplier ='';
+    public $manufacturer = '';
+
     // Response data
     public $result = null;
     public $error = null;
@@ -47,7 +50,7 @@ class Dashboard extends Component
 
     public function updatedSelectedAction()
     {
-        $this->reset(['result', 'error', 'productId', 'categoryId', 'categoryName', 'categoryNameForCreate', 'name', 'productName', 'price', 'categoryIdForCreate', 'stockQuantity', 'adjustment']);
+        $this->reset(['result', 'error', 'productId', 'categoryId', 'categoryName', 'ISBN', 'supplier', 'manufacturer', 'categoryNameForCreate', 'name', 'productName', 'price', 'categoryIdForCreate', 'stockQuantity', 'adjustment']);
     }
 
     public function executeAction()
@@ -68,51 +71,29 @@ class Dashboard extends Component
                         break;
                     }
                     
-                    // Kategorie suchen
-                    $category = null;
-                    $searchTerm = '';
-                    $searchType = '';
                     
                     if (!empty($this->categoryId)) {
                         if (!preg_match('/^\d+$/', trim($this->categoryId))) {
                             $this->error = 'Kategorie-ID muss eine gültige Ganzzahl sein.';
                             break;
                         }
-                        $this->validate(['categoryId' => 'integer']);
                         $action = new GetCategory();
-                        $response = $action->handle($this->categoryId);
-                        
-                        if ($response->status() === 404) {
-                            $this->error = 'Kategorie mit ID "' . $this->categoryId . '" existiert nicht.';
-                            break;
-                        }
-                        
-                        $category = $response->getData();
-                        $searchTerm = $this->categoryId;
-                        $searchType = 'ID';
+                        $category = $action->handle($this->categoryId);
+                          
                     } else {
-                        $this->validate(['categoryName' => 'string']);
                         $action = new GetCategory();
-                        $response = $action->handleByName($this->categoryName);
-                        
-                        if ($response->status() === 404) {
-                            $this->error = 'Kategorie mit Name "' . $this->categoryName . '" existiert nicht.';
-                            break;
-                        }
-                        
-                        $category = $response->getData();
-                        $searchTerm = $this->categoryName;
-                        $searchType = 'Name';
+                        $category = $action->handleByName($this->categoryName);
+                            
                     }
                     
                     // Produkte in dieser Kategorie laden
                     $action = new GetProductsByCategory();
-                    $response = $action->handle($category->id);
+                    $response = $action->handle($this->categoryId);
                     $this->result = $response->getData();
                     
                     // Kategorie existiert, aber keine Produkte
                     if (is_array($this->result) && empty($this->result)) {
-                        $this->error = 'Keine Produkte in der Kategorie "' . $category->name . '" (ID: ' . $category->id . ') gefunden.';
+                        $this->error = 'Keine Produkte in der Kategorie "' . $this->categoryName . '" (ID: ' . $this->categoryId . ') gefunden.';
                     }
                     break;
                     
@@ -129,52 +110,25 @@ class Dashboard extends Component
                             $this->error = 'Produkt-ID muss eine gültige Ganzzahl sein.';
                             break;
                         }
-                        $this->validate([
-                            'productId' => 'integer',
-                            'productName' => 'string'
-                        ]);
                         
                         $action = new GetProduct();
-                        $response = $action->handleByIdAndName($this->productId, $this->productName);
-                        
-                        if ($response->status() === 404) {
-                            $this->error = 'Produkt-ID "' . $this->productId . '" und Produktname "' . $this->productName . '" gehören nicht zum selben Produkt oder das Produkt existiert nicht.';
-                            break;
-                        }
-                        
-                        $this->result = $response->getData();
+                        $this->result = $action->handleByIdAndName($this->productId, $this->productName);
                         break;
                     }
                     
                     // Nur ein Feld ausgefüllt: Normale Suche
                     $action = new GetProduct();
-                    $response = null;
-                    $searchTerm = '';
-                    $searchType = '';
+                
                     
                     if (!empty($this->productId)) {
                         if (!preg_match('/^\d+$/', trim($this->productId))) {
                             $this->error = 'Produkt-ID muss eine gültige Ganzzahl sein.';
                             break;
                         }
-                        $this->validate(['productId' => 'integer']);
-                        $response = $action->handle($this->productId);
-                        $searchTerm = $this->productId;
-                        $searchType = 'ID';
+                        $this->result = $action->handle($this->productId);
                     } else {
-                        $this->validate(['productName' => 'string']);
-                        $response = $action->handleByName($this->productName);
-                        $searchTerm = $this->productName;
-                        $searchType = 'Name';
+                        $this->result = $action->handleByName($this->productName);
                     }
-                    
-                    // Produkt existiert nicht
-                    if ($response->status() === 404) {
-                        $this->error = 'Produkt mit ' . $searchType . ' "' . $searchTerm . '" existiert nicht oder der Produktname ist unvollständig.';
-                        break;
-                    }
-                    
-                    $this->result = $response->getData();
                     break;
                     
                 case 'out-of-stock':
@@ -226,45 +180,36 @@ class Dashboard extends Component
                         $this->error = 'Bitte einen positiven Betrag als Preis angeben!';
                         break;
                     }
-                    
-                    // Prüfe ob Kategorie existiert
-                    $categoryAction = new GetCategory();
-                    $categoryResponse = $categoryAction->handle($this->categoryIdForCreate);
-                    if ($categoryResponse->status() === 404) {
-                        $this->error = 'Kategorie mit ID ' . $this->categoryIdForCreate . ' existiert nicht.';
+
+                    // Prüfe ob ISBN numerisch ist
+                    if (!empty($this->ISBN) && $this->isValidIsbn($this->ISBN) === false) {
+                        $this->error = 'Bitte geben Sie eine gültige 10- oder 13-stellige ISBN-Nummer ein.';
                         break;
                     }
+                
+                    // Prüfe ob Kategorie existiert
+                    $categoryAction = new GetCategory();
+                    $categoryAction->handle($this->categoryIdForCreate);
                     
-                    $this->validate([
-                        'name' => 'required|string|max:255',
-                        'price' => 'required|numeric|min:0',
-                        'categoryIdForCreate' => 'required|integer',
-                        'stockQuantity' => 'required|integer|min:0',
-                    ]);
                     $action = new CreateProduct();
                     $this->result = $action->handle([
                         'name' => $this->name,
                         'price' => $this->price,
                         'category_id' => $this->categoryIdForCreate,
                         'stock_quantity' => $this->stockQuantity,
+                        'supplier' => $this->supplier,
+                        'manufacturer' => $this->manufacturer,
+                        'isbn' => $this->ISBN,
                     ]);
                     break;
                     
                 case 'create-category':
                     // Nur Admins und Manager dürfen Kategorien erstellen
-                    if (!in_array(Auth::user()->role, ['admin', 'manager'])) {
-                        $this->error = 'Nur Administratoren und Manager dürfen Kategorien erstellen.';
-                        break;
-                    }
                     
                     if (empty($this->categoryNameForCreate)) {
                         $this->error = 'Bitte geben Sie einen Kategorienamen ein.';
                         break;
                     }
-                    
-                    $this->validate([
-                        'categoryNameForCreate' => 'required|string|max:255',
-                    ]);
                     
                     $action = new CreateCategory();
                     $this->result = $action->handle([
@@ -273,11 +218,6 @@ class Dashboard extends Component
                     break;
                 
                 case 'delete-category':
-                    // Nur Admins und Manager dürfen Kategorien löschen
-                    if (!in_array(Auth::user()->role, ['admin', 'manager'])) {
-                        $this->error = 'Nur Administratoren und Manager dürfen Kategorien löschen.';
-                        break;
-                    }
                     
                     // Validiere Kategorie-ID
                     if (empty($this->categoryId) || !preg_match('/^\d+$/', trim($this->categoryId))) {
@@ -291,14 +231,10 @@ class Dashboard extends Component
                         break;
                     }
                     
-                    // Prüfe ob Kategorie existiert
-                    $category = Category::find($this->categoryId);
-                    if (!$category) {
-                        $this->error = 'Kategorie mit ID "' . $this->categoryId . '" existiert nicht.';
-                        break;
-                    }
-                    
-                    // Prüfe ob Name übereinstimmt
+                    $action = new GetCategory(); 
+                    $category = $action->handle($this->categoryId);
+
+                    // Prüfe ob eingegebener Name mit gespeichertem übereinstimmt
                     if ($category->name !== $this->categoryName) {
                         $this->error = 'Kategoriename "' . $this->categoryName . '" stimmt nicht mit der Kategorie ID ' . $this->categoryId . ' überein. Gespeicherter Name: "' . $category->name . '"';
                         break;
@@ -327,35 +263,25 @@ class Dashboard extends Component
                         $this->error = 'Bitte einen positiven Betrag als Preis angeben!';
                         break;
                     }
-                    
+
+                    // Prüfe ob ISBN numerisch ist
+                    if (!empty($this->ISBN) && $this->isValidIsbn($this->ISBN) === false) {
+                        $this->error = 'Bitte geben Sie eine gültige 10- oder 13-stellige ISBN-Nummer ein.';
+                        break;
+                    }
+                
                     // Prüfe ob Kategorie existiert
                     $categoryAction = new GetCategory();
-                    $categoryResponse = $categoryAction->handle($this->categoryIdForCreate);
-                    if ($categoryResponse->status() === 404) {
-                        $this->error = 'Kategorie mit ID ' . $this->categoryIdForCreate . ' existiert nicht.';
-                        break;
-                    }
+                    $categoryAction->handle($this->categoryIdForCreate);
                     
-                    $this->validate([
-                        'productId' => 'required|integer',
-                        'name' => 'required|string|max:255',
-                        'price' => 'required|numeric|min:0',
-                        'categoryIdForCreate' => 'required|integer',
-                    ]);
-                    $action = new GetProduct();
-                    $response = $action->handle($this->productId);
-                    
-                    if ($response->status() === 404) {
-                        $this->error = 'Produkt mit ID ' . $this->productId . ' nicht gefunden.';
-                        break;
-                    }
-                    
-                    $product = Product::findOrFail($this->productId);
                     $updateAction = new UpdateProduct();
-                    $this->result = $updateAction->handle($product, [
+                    $this->result = $updateAction->handle($this->productId, [
                         'name' => $this->name,
                         'price' => $this->price,
                         'category_id' => $this->categoryIdForCreate,
+                        'supplier' => $this->supplier,
+                        'manufacturer' => $this->manufacturer,
+                        'isbn' => $this->ISBN,
                     ]);
                     break;
                     
@@ -372,27 +298,14 @@ class Dashboard extends Component
                         break;
                     }
                     
-                    $this->validate([
-                        'productId' => 'required|integer',
-                        'productName' => 'required|string'
-                    ]);
-                    
                     // Prüfen ob ID und Name zum selben Produkt gehören
                     $action = new GetProduct();
-                    $response = $action->handleByIdAndName($this->productId, $this->productName);
-                    
-                    if ($response->status() === 404) {
-                        $this->error = 'Produkt-ID "' . $this->productId . '" und Produktname "' . $this->productName . '" gehören nicht zum selben Produkt oder das Produkt existiert nicht.';
-                        break;
-                    }
-                    
-                    $productData = $response->getData();
-                    $product = Product::findOrFail($this->productId);
+                    $productdata = $action->handleByIdAndName($this->productId, $this->productName);
                     $deleteAction = new DeleteProduct();
-                    $deleteAction->handle($product);
+                    $deleteAction->handle($this->productId);
                     
                     // Speichere Produktdaten für Anzeige (Produkt ist bereits gelöscht)
-                    $this->result = [$productData]; // Als Array für Tabellen-Anzeige
+                    $this->result = [$productdata]; // Als Array für Tabellen-Anzeige
                     break;
                     
                 case 'stock-adjustment':
@@ -414,60 +327,18 @@ class Dashboard extends Component
                         break;
                     }
                     
-                    $this->validate([
-                        'productId' => 'required|integer',
-                        'productName' => 'required|string',
-                    ]);
-                    
                     $prodInfo = [
                         'product_id' => $this->productId,
                         'product_name' => $this->productName,
                         'adjustment' => (int)$this->adjustment,
                     ];
                     $action = new StockAdjustment();
-                    
-                    // Prüfe ob Produkt existiert
-                    $prod = $action->handleIfProdExists($prodInfo);
-                    if (!$prod) {
-                        $this->error = 'Produkt mit ID ' . $this->productId . ' nicht gefunden.';
-                        break;
-                    }
-                    
-                    // Prüfe ob Produktname übereinstimmt
-                    $prod = $action->handleIfProdNamComplies($prod, $prodInfo);
-                    if (!$prod) {
-                        $this->error = 'Eingegebener Produktname "' . $this->productName . '" stimmt nicht mit dem gespeicherten Produktnamen überein.';
-                        break;
-                    }
-                    
-                    // Prüfe ob Bestand 100 nicht überschreitet
-                    if (!$action->handleIfStockFull($prod, $prodInfo)) {
-                        $neuerBestand = $prod->count + (int)$this->adjustment;
-                        $this->error = 'Bestandsanpassung würde die Obergrenze von 100 überschreiten. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $this->adjustment . ', Neuer Bestand wäre: ' . $neuerBestand;
-                        break;
-                    }
-                    
-                    // Prüfe ob Bestand nicht negativ wird
-                    if (!$action->handleIfStockNegative($prod, $prodInfo)) {
-                        $this->error = 'Bestandsanpassung würde zu einem negativen Bestand führen. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $this->adjustment;
-                        break;
-                    }
-                    
-                    $this->result = $prod->fresh();
+                    $this->result = $action->handle($prodInfo);
                     break;
                 
                 case 'view-categories':
-                    $categories = Category::with([
-                        'products',
-                        'productsWithLowStock',
-                        'productsOutOfStock'
-                    ])->withCount([
-                        'products',
-                        'productsWithLowStock',
-                        'productsOutOfStock'
-                    ])->orderBy('name')->get();
-                    
-                    $this->result = $categories;
+                    $action = new GetCategories();
+                    $this->result = $action->handle();
                     break;
                     
                 default:
@@ -478,6 +349,27 @@ class Dashboard extends Component
         } catch (\Exception $e) {
             $this->error = 'Fehler: ' . $e->getMessage();
         }
+    }
+
+    function isValidIsbn($isbn) {
+    $isbn = str_replace(['-', ' '], '', strtoupper($isbn));
+    if (preg_match('/^\d{9}[\dX]$/', $isbn)) {
+        // ISBN-10
+        $sum = 0;
+        for ($i = 0; $i < 9; $i++) $sum += ((int)$isbn[$i]) * (10 - $i);
+        $check = $isbn[9] == 'X' ? 10 : (int)$isbn[9];
+        $sum += $check;
+        return $sum % 11 == 0;
+    } elseif (preg_match('/^97[89]\d{10}$/', $isbn)) {
+        // ISBN-13
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) $sum += ((int)$isbn[$i]) * ($i % 2 ? 3 : 1);
+        $check = (10 - ($sum % 10)) % 10;
+        return $check == (int)$isbn[12];
+    }
+
+
+    return false;
     }
 
     public function render()

@@ -7,22 +7,45 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UpdateProduct
 {
     use AsAction;
 
-    public function handle(Product $product, array $data): Product
+    public function handle($id, array $data): Product
     {
+        // Validierung
+        $validated = validator(array_merge(['id' => $id], $data), [
+            'id' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|integer',
+            'supplier' => 'required|string|max:255',
+            'manufacturer' => 'required|string|max:255',
+            'isbn' => 'sometimes|string|max:255',
+        ])->validate();
+
+        try{
+        $product = Product::findorfail($validated['id']);
+        }
+        catch (ModelNotFoundException $e) {
+            throw new \Exception('Produkt mit ID ' . $validated['id'] . ' nicht gefunden.');
+        }
+
+        // Check authorization - only admin/manager can update
+        Gate::authorize('update', $product);
+
         $product->update($data);
         return $product->fresh();
     }
 
     public function asController(Request $request, int $id): JsonResponse
     {
-        $product = Product::find($id);
-        
-        if (!$product) {
+        try{
+        $product = Product::findorfail($id);
+        }
+        catch (ModelNotFoundException $e) {
             return response()->json([
                 'error' => 'Produkt nicht gefunden.',
                 'message' => 'Das Produkt mit der ID ' . $id . ' existiert nicht.'
@@ -43,7 +66,8 @@ class UpdateProduct
             'category_id' => 'sometimes|exists:categories,id',
         ]);
 
-        $updatedProduct = $this->handle($product, $validated);
+        $product->update($validated);
+        $updatedProduct = $product->fresh();
 
         return response()->json($updatedProduct);
     }

@@ -18,14 +18,27 @@ class CreateProduct
      */
     public function handle(array $data): Product
     {
+
+        $validated = validator($data, [
+            'name' => 'required|string|max:255',
+            'isbn' => 'sometimes|string|max:255',
+            'manufacturer' => 'nullable|string|max:255',
+            'supplier' => 'nullable|string|max:255',
+            'stock_quantity' => 'required|integer|min:0|max:100',
+            'price' => 'required|numeric|min:0',
+            'last_supplied_at' => 'nullable|date',
+            'category_id' => 'required|exists:categories,id',
+        ])->validate();
+
+
         // Prüfe ob ein Produkt mit gleichem Namen bereits existiert
-        $existingProduct = Product::where('name', $data['name'])->first();
+        $existingProduct = Product::where('name', $validated['name'])->first();
         if ($existingProduct) {
-            throw new \Exception('Ein Produkt mit dem Namen "' . $data['name'] . '" existiert bereits (ID: ' . $existingProduct->id . ').');
+            throw new \Exception('Ein Produkt mit dem Namen "' . $validated['name'] . '" existiert bereits (ID: ' . $existingProduct->id . ').');
         }
         
         // Normalisiere die Eingabedaten (falls aus unterschiedlichen Quellen)
-        $stockQuantity = $data['count'] ?? $data['stock_quantity'] ?? 0;
+        $stockQuantity = $validated['count'] ?? $validated['stock_quantity'] ?? 0;
         
         // Prüfe Obergrenze von 100
         if ($stockQuantity > 100) {
@@ -33,14 +46,14 @@ class CreateProduct
         }
         
         $productData = [
-            'name' => $data['name'],
-            'price' => $data['price'],
-            'category_id' => $data['category_id'],
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'category_id' => $validated['category_id'],
             'count' => $stockQuantity,
-            'isbn' => $data['isbn'] ?? null,
-            'manufacturer' => $data['manufacturer'] ?? null,
-            'supplier' => $data['supplier'] ?? null,
-            'last_supplied_at' => $data['last_supplied_at'] ?? null,
+            'isbn' => $validated['isbn'] ?? null,
+            'manufacturer' => $validated['manufacturer'] ?? null,
+            'supplier' => $validated['supplier'] ?? null,
+            'last_supplied_at' => $validated['last_supplied_at'] ?? null,
         ];
         
         return Product::create($productData);

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+use App\Models\InventoryTransaction;
 
 class DeleteProduct
 {
@@ -20,7 +22,7 @@ class DeleteProduct
             'productId' => 'required|integer',
         ])->validate();
 
-         try{
+        try{
         $product = Product::findorfail($validated['productId']);
         }
         catch (ModelNotFoundException $e) {
@@ -29,6 +31,16 @@ class DeleteProduct
 
         // Check authorization - only admin/manager can delete
         Gate::authorize('delete', $product);
+
+        $transaction_info = [
+            'product_id' => $product->id,
+            'column_name_of_change' => 'all',
+            'reason_for_change' => 'Einzelnes Produkt gelöscht',
+            'old_value' => $product->name,
+            'new_value' => null,
+            'user_id' => Auth::id(),
+        ];
+        InventoryTransaction::create($transaction_info);
         return $product->delete();
     }
 

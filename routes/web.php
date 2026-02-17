@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
 // ============================================
 // TEST ROUTES (NO AUTH - Remove before production!)
 // ============================================
+/* 
 Route::prefix('test')->middleware('test.admin')->group(function () {
     Route::get('/products/category/{id}', GetProductsByCategory::class)->whereNumber('id');
     Route::get('/products/{id}', GetProduct::class)->whereNumber('id');
@@ -72,5 +73,5 @@ Route::prefix('test')->middleware('test.admin')->group(function () {
     Route::put('/products/{id}', UpdateProduct::class)->whereNumber('id');
     Route::delete('/products/{id}', DeleteProduct::class)->whereNumber('id');
 });
-
+*/
 

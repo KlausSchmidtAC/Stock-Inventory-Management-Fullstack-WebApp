@@ -32,8 +32,8 @@ class ProductFactory extends Factory
             'manufacturer' => fake()->optional(0.7)->company(),
             'supplier' => fake()->optional(0.7)->company(),
             'price' => fake()->randomFloat(2, 5, 500),
-            'last_supplied_at' => fake()->optional(0.6)->dateTimeBetween('-1 year', 'now'),
-            'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory(),
+            'last_supplied_at' => fake()->optional(0.6)->dateTimeBetween('-3 year', 'now'),
+            'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory()->create()->id
         ];
     }
 

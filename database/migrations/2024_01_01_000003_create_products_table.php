@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamp('last_supplied_at')->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
             
             $table->index('isbn');
             $table->index('category_id');

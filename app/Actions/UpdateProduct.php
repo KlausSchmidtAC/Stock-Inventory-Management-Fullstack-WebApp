@@ -6,8 +6,10 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\InventoryTransaction;
 
 class UpdateProduct
 {
@@ -36,7 +38,28 @@ class UpdateProduct
         // Check authorization - only admin/manager can update
         Gate::authorize('update', $product);
 
-        $product->update($data);
+        // Optional: Log changes in InventoryTransaction 
+        // TO-DO: Implement this in a more generic way to log all changes, not just stock adjustments
+
+        $product->fill($validated); 
+
+        $changed = $product->getDirty(); // Get only changed attributes
+        $old_values = $product->getOriginal(); // Get original attributes
+        
+        foreach(array_keys($changed) as $column) {
+            $transactionInfo = [
+                'product_id' => $product->id,
+                'column_name_of_change' => $column,
+                'reason_for_change' => 'Produktinformationen aktualisiert',
+                'old_value' => $old_values[$column],
+                'new_value' => $changed[$column],
+                'user_id' => Auth::id(),
+            ];
+            InventoryTransaction::create($transactionInfo);
+        }
+
+        $product->save();
+
         return $product->fresh();
     }
 
@@ -66,7 +89,25 @@ class UpdateProduct
             'category_id' => 'sometimes|exists:categories,id',
         ]);
 
-        $product->update($validated);
+        $product->fill($validated); 
+
+        $changed = $product->getDirty(); // Get only changed attributes
+        $old_values = $product->getOriginal(); // Get original attributes
+        
+        foreach(array_keys($changed) as $column) {
+            $transactionInfo = [
+                'product_id' => $product->id,
+                'column_name_of_change' => $column,
+                'reason_for_change' => 'Produktinformationen aktualisiert',
+                'old_value' => $old_values[$column],
+                'new_value' => $changed[$column],
+                'user_id' => Auth::id(),
+            ];
+            InventoryTransaction::create($transactionInfo);
+        }
+
+        $product->save();
+
         $updatedProduct = $product->fresh();
 
         return response()->json($updatedProduct);

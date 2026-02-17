@@ -16,8 +16,7 @@ use App\Actions\DeleteCategory;
 use App\Actions\GetCategories;
 use App\Actions\StockAdjustment;
 use Livewire\Attributes\Layout;
-use App\Models\Product;
-use App\Models\Category;
+
 
 #[Layout('components.layouts.app')]
 class Dashboard extends Component
@@ -333,7 +332,7 @@ class Dashboard extends Component
                         'adjustment' => (int)$this->adjustment,
                     ];
                     $action = new StockAdjustment();
-                    $this->result = $action->handle($prodInfo);
+                    $this->result = $action->handleStockAdjustment($prodInfo);
                     break;
                 
                 case 'view-categories':

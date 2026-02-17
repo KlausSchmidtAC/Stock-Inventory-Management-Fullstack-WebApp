@@ -2,14 +2,16 @@
  
 namespace App\Actions;
 
-use App\Models\User;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use App\Models\InventoryTransaction;
 use Lorisleiva\Actions\Concerns\AsAction;
+
 
 class StockAdjustment{
     use AsAction; 
@@ -27,8 +29,6 @@ class StockAdjustment{
 
      public function handleIfProdNamComplies(Product $product, array $StockAdjustmentInfo): ?Product
     {
-      
-        $productId = $StockAdjustmentInfo['product_id'];
         $productName = $StockAdjustmentInfo['product_name'];
     
         if($product->name !== $productName) {
@@ -36,10 +36,6 @@ class StockAdjustment{
         }
         return $product; 
     }
-
-
-
-
 
 
     public function handleIfStockNegative(Product $product, array $StockAdjustmentInfo): bool
@@ -53,6 +49,15 @@ class StockAdjustment{
         if($newCount < 0) {
             return false; // Invalid adjustment leading to negative stock
         }
+        $transactionInfo = [
+            'product_id' => $product->id,
+            'column_name_of_change' => 'count',
+            'reason_for_change' => 'Bestandsanpassung',
+            'old_value' => $product->count,
+            'new_value' => $newCount,
+            'user_id' => Auth::id(),
+        ];
+        InventoryTransaction::create($transactionInfo);
 
         $product->count = $newCount;
         $product->save();
@@ -75,7 +80,7 @@ class StockAdjustment{
         return true;
     }
 
-    public function handle(array $data): Product
+    public function handleStockAdjustment(array $data): ?Product
     {
         // Validate input
         Validator::validate($data, [
@@ -83,29 +88,37 @@ class StockAdjustment{
             'product_name' => 'required|string',
         ]);
 
+        
+        DB::beginTransaction();
+
         // Prüfe ob Produkt existiert
         $prod = $this->handleIfProdExists($data);
         if (!$prod) {
+            DB::rollBack();
             throw new \Exception('Produkt mit ID ' . $data['product_id'] . ' nicht gefunden.');
         }
 
         // Prüfe ob Produktname übereinstimmt
         $prod = $this->handleIfProdNamComplies($prod, $data);
         if (!$prod) {
+            DB::rollBack();
             throw new \Exception('Eingegebener Produktname "' . $data['product_name'] . '" stimmt nicht mit dem gespeicherten Produktnamen überein.');
         }
 
         // Prüfe ob Bestand 100 nicht überschreitet
         if (!$this->handleIfStockFull($prod, $data)) {
             $neuerBestand = $prod->count + $data['adjustment'];
+            DB::rollBack();
             throw new \Exception('Bestandsanpassung würde die Obergrenze von 100 überschreiten. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment'] . ', Neuer Bestand wäre: ' . $neuerBestand);
         }
 
         // Prüfe ob Bestand nicht negativ wird
         if (!$this->handleIfStockNegative($prod, $data)) {
+            DB::rollBack();
             throw new \Exception('Bestandsanpassung würde zu einem negativen Bestand führen. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment']);
         }
 
+        DB::commit();
         return $prod->fresh();
     }
 

@@ -24,7 +24,7 @@
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                     </svg>
-                                    Gesamtanzahl unterschiedlicher Produkttypen
+                                    Gesamtanzahl von Produkttypen
                                 </span>
                                 <span class="font-bold text-blue-600 dark:text-blue-400">
                                     {{ $category->products_count }}
@@ -60,9 +60,9 @@
 
                         <!-- View Products Link -->
                         <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <a href="{{ route('dashboard') }}?category={{ $category->id }}" 
+                            <a href="{{ route('dashboard', ['selectedAction' => 'get-by-category', 'categoryId' => $category->id, 'categoryName' => $category->name]) }}" 
                                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center justify-center">
-                                Produkte anzeigen
+                                Produkte dieser Kategorie anzeigen
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -83,15 +83,5 @@
             @endforelse
         </div>
 
-        <!-- Back to Dashboard -->
-        <div class="mt-8 text-center">
-            <a href="{{ route('dashboard') }}" 
-               class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Zurück zum Dashboard
-            </a>
-        </div>
     </div>
 </div>

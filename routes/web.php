@@ -44,8 +44,8 @@ Route::get('/dashboard', Dashboard::class)
 // ============================================
 Route::middleware('auth')->group(function () {
     // Read routes (all authenticated users)
-    Route::get('/products/category/{id}', GetProductsByCategory::class)->whereNumber('id');
-    Route::get('/products/{id}', GetProduct::class)->whereNumber('id');
+    Route::get('/products/category/{id}', GetProductsByCategory::class)->whereNumber('id')->name('products.byCategory');
+    Route::get('/products/{id}', GetProduct::class)->whereNumber('id')->name('product.show');
     Route::get('/products/out-of-stock', GetOutOfStockProducts::class);
     
     // Stock adjustment (all authenticated users)

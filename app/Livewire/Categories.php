@@ -21,7 +21,7 @@ class Categories extends Component
     {
         $categories = !empty($this->categories) ? 
         collect($this->categories)  :
-        Category::with([
+        collect(Category::with([
             'products',
             'productsWithLowStock',
             'productsOutOfStock'
@@ -29,7 +29,7 @@ class Categories extends Component
             'products',
             'productsWithLowStock',
             'productsOutOfStock'
-        ])->orderBy('name')->get();
+        ])->orderBy('name')->get());
 
         return view('livewire.categories', [
             'categories' => $categories

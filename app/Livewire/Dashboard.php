@@ -46,15 +46,19 @@ class Dashboard extends Component
 
     public function mount()
     {
-        $this->selectedAction = request()->get('selectedAction','');
-        $categoryIdFromRequest = request()->get('categoryId');
-        $categoryNameFromRequest = request()->get('categoryName');  
+        if (request()->has('selectedAction') && request()->has('categoryId')) {
+            $this->selectedAction = request()->get('selectedAction', '');
+            $categoryIdFromRequest = request()->get('categoryId');
+            $categoryNameFromRequest = request()->get('categoryName');
 
-        if ($this->selectedAction === 'get-by-category' && is_numeric($categoryIdFromRequest)) {
-            $this->categoryId = $categoryIdFromRequest;
-            $this->categoryName = $categoryNameFromRequest;
-            $this->executeAction();
+
+            if ($this->selectedAction === 'get-by-category' && is_numeric($categoryIdFromRequest)) {
+                $this->categoryId = $categoryIdFromRequest;
+                $this->categoryName = $categoryNameFromRequest;
+                $this->executeAction();
+            }
         } else {
+
             $this->reset(['result', 'error']);
         }
     }
@@ -87,10 +91,10 @@ class Dashboard extends Component
                         if ($categoryById->name !== $this->categoryName) {
                             $this->error = 'Kategoriename "' . $this->categoryName . '" stimmt nicht mit der Kategorie ID ' . $this->categoryId . ' überein. Gespeicherter Name: "' . $categoryById->name . '"';
                             break;
-                        }     
+                        }
                     }
-                    
-                     if (!empty($this->categoryName)) {
+
+                    if (!empty($this->categoryName)) {
                         $action = new GetCategory();
                         $categoryByName = $action->handleByName($this->categoryName);
                         if ($categoryByName->id != $this->categoryId) {

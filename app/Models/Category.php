@@ -33,7 +33,7 @@ class Category extends Model
 
     /**
      * Get the count of products, of products with low stock and out of stock in the category.
-     * Important: This is not a relationship method, but an accessor to get the count of products in the category. 
+     * Important: The folowing are not a relationship methods, but an accessor to get the count of products in the category. 
      * Assures the existence of real properties, which dont get lost during Livewire`s serialization and deserialization process when surpassing results to child components.  
      * @return int
      */
@@ -52,6 +52,9 @@ class Category extends Model
         return $this->productsOutOfStock()->count();
     }
 
+
+
+    // Relation-Methods for low stock and out of stock products, to eager load them in the Categories component and avoid N+1 problem when counting them in the blade view.
     /**
      * Get products with count less than 10.
      */

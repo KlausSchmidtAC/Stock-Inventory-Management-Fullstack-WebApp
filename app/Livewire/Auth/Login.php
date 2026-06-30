@@ -13,7 +13,7 @@ class Login extends Component
     #[Validate('required|email')]
     public string $email = '';
     
-    #[Validate('required')]
+    #[Validate('required|string')]
     public string $password = '';
     
     public bool $remember = false;

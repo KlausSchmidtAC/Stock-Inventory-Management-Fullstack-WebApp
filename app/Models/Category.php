@@ -38,17 +38,28 @@ class Category extends Model
      * @return int
      */
     public function getProductsCountAttribute()
-    {
+    {   
+        if (array_key_exists('products_count', $this->attributes)) {
+        return (int) $this->attributes['products_count'];
+    }
         return $this->products()->count();
     }
 
     public function getProductsWithLowStockCountAttribute()
     {
+
+        if (array_key_exists('products_with_low_stock_count', $this->attributes)) {
+        return (int) $this->attributes['products_with_low_stock_count'];
+    }
         return $this->productsWithLowStock()->count();
     }
 
     public function getProductsOutOfStockCountAttribute()
     {
+        
+        if (array_key_exists('products_out_of_stock_count', $this->attributes)) {
+        return (int) $this->attributes['products_out_of_stock_count'];
+    }
         return $this->productsOutOfStock()->count();
     }
 

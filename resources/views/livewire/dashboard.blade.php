@@ -75,14 +75,14 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategorie-ID</label>
-                                    <input wire:model="categoryId" type="text"
+                                    <input wire:model="formData.categoryId" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 1">
                                 </div>
                                 <div class="text-center text-gray-500 font-semibold">ODER</div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategoriename</label>
-                                    <input wire:model="categoryName" type="text"
+                                    <input wire:model="formData.categoryName" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Smartphones">
                                 </div>
@@ -97,14 +97,14 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Produkt-ID</label>
-                                    <input wire:model="productId" type="text"
+                                    <input wire:model="formData.productId" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 5">
                                 </div>
                                 <div class="text-center text-gray-500 font-semibold">UND / ODER</div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Produktname</label>
-                                    <input wire:model="productName" type="text"
+                                    <input wire:model="formData.productName" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Laptop Dell XPS 15">
                                 </div>
@@ -119,14 +119,14 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Produkt-ID *</label>
-                                    <input wire:model="productId" type="text"
+                                    <input wire:model="formData.productId" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 5" required>
                                 </div>
                                 <div class="text-center text-gray-500 font-semibold">UND</div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
-                                    <input wire:model="productName" type="text"
+                                    <input wire:model="formData.productName" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Laptop Dell XPS 15" required>
                                 </div>
@@ -140,43 +140,43 @@
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
-                                    <input wire:model="name" type="text"
+                                    <input wire:model="formData.name" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Laptop Dell XPS">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Preis * (€)</label>
-                                    <input wire:model="price" type="number" step="0.01"
+                                    <input wire:model="formData.price" type="number" step="0.01"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 999.99">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategorie-ID *</label>
-                                    <input wire:model="categoryIdForCreate" type="text"
+                                    <input wire:model="formData.categoryId" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 1">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Anfangsbestand *</label>
-                                    <input wire:model="stockQuantity" type="text"
+                                    <input wire:model="formData.stockQuantity" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 10">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Lieferant</label>
-                                    <input wire:model="supplier" type="text"
+                                    <input wire:model="formData.supplier" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. TechSupply GmbH">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Hersteller</label>
-                                    <input wire:model="manufacturer" type="text"
+                                    <input wire:model="formData.manufacturer" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Dell">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
-                                    <input wire:model="ISBN" type="text"
+                                    <input wire:model="formData.ISBN" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. 978-3-16-148410-0">
                                 </div>
@@ -186,7 +186,7 @@
                             @if($selectedAction === 'create-category')
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategoriename *</label>
-                                    <input wire:model="categoryNameForCreate" type="text"
+                                    <input wire:model="formData.categoryName" type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                         placeholder="z.B. Smartphones, Laptops, Tablets">
                                     <p class="mt-1 text-sm text-gray-500">Eine neue Produktkategorie anlegen (Admin/Manager)</p>
@@ -217,14 +217,14 @@
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Kategorie-ID *</label>
-                                        <input wire:model="categoryId" type="text"
+                                        <input wire:model="formData.categoryId" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 1">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Kategoriename zur
                                             Bestätigung *</label>
-                                        <input wire:model="categoryName" type="text"
+                                        <input wire:model="formData.categoryName" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="Geben Sie den Kategorienamen zur Bestätigung ein">
                                         <p class="mt-1 text-sm text-red-600">Sicherheitsabfrage: Name muss exakt übereinstimmen!
@@ -238,43 +238,43 @@
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Produkt-ID *</label>
-                                        <input wire:model="productId" type="text"
+                                        <input wire:model="formData.productId" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 5">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Name *</label>
-                                        <input wire:model="name" type="text"
+                                        <input wire:model="formData.name" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. Laptop Dell XPS 15">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Preis * (€)</label>
-                                        <input wire:model="price" type="number" step="0.01"
+                                        <input wire:model="formData.price" type="number" step="0.01"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 1099.99">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neue Kategorie-ID *</label>
-                                        <input wire:model="categoryIdForCreate" type="text"
+                                        <input wire:model="formData.categoryId" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 2">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Lieferant</label>
-                                        <input wire:model="supplier" type="text"
+                                        <input wire:model="formData.supplier" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. TechSupply GmbH">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neuer Hersteller</label>
-                                        <input wire:model="manufacturer" type="text"
+                                        <input wire:model="formData.manufacturer" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. Dell">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Neue ISBN</label>
-                                        <input wire:model="ISBN" type="text"
+                                        <input wire:model="formData.ISBN" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 978-3-16-148410-0">
                                     </div>
@@ -286,20 +286,20 @@
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Produkt-ID *</label>
-                                        <input wire:model="productId" type="text"
+                                        <input wire:model="formData.productId" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. 5">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
-                                        <input wire:model="productName" type="text"
+                                        <input wire:model="formData.productName" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. Produktname">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Anpassung * (+/-
                                             Stück)</label>
-                                        <input wire:model="adjustment" type="text"
+                                        <input wire:model="formData.adjustment" type="text"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             placeholder="z.B. -5 oder +10">
                                         <p class="mt-1 text-sm text-gray-500">Negative Werte reduzieren, positive erhöhen den
@@ -371,7 +371,7 @@
 
                             {{-- Single Product Display --}}
                         @elseif(is_object($result) && isset($result->id))
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Ergebnis der Bestandsanpassung</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Ergebnis der Bestandsanpassung oder Löschvorgangs</h3>
                             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                                 <div class="px-4 py-5 sm:px-6">
                                     <h3 class="text-lg leading-6 font-medium text-gray-900">{{ $result->name }}</h3>
@@ -448,11 +448,10 @@
                             </div>
 
                             {{-- Multiple Products Display (Table with Flux Badges) --}}
-                        @elseif($selectedAction !== 'view-categories' && $selectedAction !== 'delete-category' && (is_array($result) || (is_object($result) && !isset($result->id))))
+                        @elseif($selectedAction !== 'view-categories' && $selectedAction !== 'delete-category' && (is_array($result) || $result instanceof \Illuminate\Support\Collection || is_iterable($result)))
                             @php
-                                $products = is_array($result) ? $result : (array) $result;
+                            $products = $result instanceof \Illuminate\Support\Collection ? $result->all() : (is_array($result) ? $result : (array) $result);
                             @endphp
-
                             {{-- Check if this is a delete operation result --}}
                             @if($selectedAction === 'delete-product')
                                 <h3 class="text-lg font-medium text-red-600 mb-4">
@@ -699,9 +698,10 @@
                                                     @endforelse
                                                 </tbody>
                                             </table>
-                                        @endif
-                                        @if($showCategoriesComponent)
-                                            @livewire('categories', ['categories' => $result])
+                                        @else
+                                            <div class="p-4 bg-gray-50 rounded-lg">
+                                                @livewire('categories', ['categories' => $result])
+                                            </div>
                                         @endif
                                     </div>
                                 </div>

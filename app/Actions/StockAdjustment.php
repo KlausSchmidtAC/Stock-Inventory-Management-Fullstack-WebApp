@@ -1,178 +1,124 @@
 <?php
- 
+
 namespace App\Actions;
 
 use App\Models\Product;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Models\InventoryTransaction;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
-use App\Models\InventoryTransaction;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-
-class StockAdjustment{
-    use AsAction; 
-
-     public function handleIfProdExists(array $StockAdjustmentInfo): ?Product
+class StockAdjustment
+{
+    use AsAction;
+    public function handle(array $data): Product
     {
-        $productId = $StockAdjustmentInfo['product_id'];
-        try {
-            $product = Product::findOrFail($productId);
-            return $product;
-        } catch (\Exception $e) {
-            return null; // Product not found, do not update
+
+        $validator = Validator::make(
+            $data,
+            [
+                'productId' => 'required|integer|exists:products,id',
+                'productName' => 'required|string|max:255',
+
+                'adjustment' => ['required', 'string', 'regex:/^[+\-]\d+$/'],
+            ],
+            [
+                'productId.exists' => 'Das Produkt mit der angegebenen ID existiert nicht.',
+                'adjustment.regex' => 'Die Bestandsanpassung muss mit + oder - beginnen, gefolgt von einer positiven Ganzzahl (z.B. +10 oder -5).',
+            ]
+        );
+
+        $validated = $validator->validate();
+
+        $product = Product::findOrFail($validated['productId']);
+
+
+        if ($product->name !== $validated['productName']) {
+            throw ValidationException::withMessages([
+                'productName' => ["Der eingegebene Produktname '{$validated['productName']}' stimmt nicht mit dem gespeicherten Produktnamen überein."],
+            ]);
         }
+
+
+        Gate::authorize('adjustStock', $product);
+
+
+        $adjustmentValue = (int)$validated['adjustment'];
+        $newCount = $product->count + $adjustmentValue;
+
+
+        if ($newCount > 100) {
+            throw ValidationException::withMessages([
+                'adjustment' => ["Bestandsanpassung würde die Obergrenze von 100 überschreiten. Aktueller Bestand: {$product->count}, Anpassung: {$validated['adjustment']}, Neuer Bestand wäre: {$newCount}"],
+            ]);
+        }
+
+
+        if ($newCount < 0) {
+            throw ValidationException::withMessages([
+                'adjustment' => ["Bestandsanpassung würde zu einem negativen Bestand führen. Aktueller Bestand: {$product->count}, Anpassung: {$validated['adjustment']}"],
+            ]);
+        }
+
+
+        return DB::transaction(function () use ($product, $adjustmentValue, $newCount) {
+
+
+            InventoryTransaction::create([
+                'product_id' => $product->id,
+                'column_name_of_change' => 'count',
+                'reason_for_change' => 'Bestandsanpassung',
+                'old_value' => $product->count,
+                'new_value' => $newCount,
+                'user_id' => Auth::id(),
+            ]);
+
+            // Bestand aktualisieren
+            $product->count = $newCount;
+            $product->save();
+
+            return $product->fresh();
+        });
     }
 
-     public function handleIfProdNamComplies(Product $product, array $StockAdjustmentInfo): ?Product
-    {
-        $productName = $StockAdjustmentInfo['product_name'];
-    
-        if($product->name !== $productName) {
-            return null; // Product name does not match, do not update
-        }
-        return $product; 
-    }
-
-
-    public function handleIfStockNegative(Product $product, array $StockAdjustmentInfo): bool
-    {
-        $adjustment = $StockAdjustmentInfo['adjustment'];
-    
-        // Adjust stock count
-        $newCount = $product->count + $adjustment;
-
-        // Ensure stock count does not go negative
-        if($newCount < 0) {
-            return false; // Invalid adjustment leading to negative stock
-        }
-        $transactionInfo = [
-            'product_id' => $product->id,
-            'column_name_of_change' => 'count',
-            'reason_for_change' => 'Bestandsanpassung',
-            'old_value' => $product->count,
-            'new_value' => $newCount,
-            'user_id' => Auth::id(),
-        ];
-        InventoryTransaction::create($transactionInfo);
-
-        $product->count = $newCount;
-        $product->save();
-
-        return true;
-    }
-
-    public function handleIfStockFull(Product $product, array $StockAdjustmentInfo): bool
-    {
-        $adjustment = $StockAdjustmentInfo['adjustment'];
-        
-        // Calculate new stock count
-        $newCount = $product->count + $adjustment;
-        
-        // Ensure stock count does not exceed 100
-        if($newCount > 100) {
-            return false; // Invalid adjustment leading to stock exceeding limit
-        }
-        
-        return true;
-    }
-
-    public function handleStockAdjustment(array $data): ?Product
-    {
-        // Validate input
-        Validator::validate($data, [
-            'product_id' => 'required|integer',
-            'product_name' => 'required|string',
-        ]);
-
-        
-        DB::beginTransaction();
-
-        // Prüfe ob Produkt existiert
-        $prod = $this->handleIfProdExists($data);
-        if (!$prod) {
-            DB::rollBack();
-            throw new \Exception('Produkt mit ID ' . $data['product_id'] . ' nicht gefunden.');
-        }
-
-        // Prüfe ob Produktname übereinstimmt
-        $prod = $this->handleIfProdNamComplies($prod, $data);
-        if (!$prod) {
-            DB::rollBack();
-            throw new \Exception('Eingegebener Produktname "' . $data['product_name'] . '" stimmt nicht mit dem gespeicherten Produktnamen überein.');
-        }
-
-        // Prüfe ob Bestand 100 nicht überschreitet
-        if (!$this->handleIfStockFull($prod, $data)) {
-            $neuerBestand = $prod->count + $data['adjustment'];
-            DB::rollBack();
-            throw new \Exception('Bestandsanpassung würde die Obergrenze von 100 überschreiten. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment'] . ', Neuer Bestand wäre: ' . $neuerBestand);
-        }
-
-        // Prüfe ob Bestand nicht negativ wird
-        if (!$this->handleIfStockNegative($prod, $data)) {
-            DB::rollBack();
-            throw new \Exception('Bestandsanpassung würde zu einem negativen Bestand führen. Aktueller Bestand: ' . $prod->count . ', Anpassung: ' . $data['adjustment']);
-        }
-
-        DB::commit();
-        return $prod->fresh();
-    }
-
+    /**
+     * HTTP-API
+     */
     public function asController(Request $request): JsonResponse
     {
-        // Validate input
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'product_name' => 'required|string',
-            'adjustment' => 'required|integer',
-        ]);
-
-        $prodInfo = [
-            'product_id' => $validated['product_id'],
-            'adjustment' => $validated['adjustment'],
-            'product_name' => $validated['product_name']
-        ];
-
-        // Use database transaction for data consistency
         try {
-            DB::beginTransaction();
 
-            $prod = $this->handleIfProdExists($prodInfo);
-            if (!$prod) {
-                DB::rollBack();
-                return response()->json(['message' => 'Stock adjustment failed. Product ID does not exist in stock.'], 400);
-            }
+            $data = $request->only(['productId', 'productName', 'adjustment']);
 
-            // Prüfe ob Produktname übereinstimmt
-            $prod = $this->handleIfProdNamComplies($prod, $prodInfo);
-            if (!$prod) {
-                DB::rollBack();
-                return response()->json(['message' => 'Stock adjustment failed. Product name does not match.'], 400);
-            }
 
-            // Check authorization - both admin/manager and staff can adjust stock
-            Gate::authorize('adjustStock', $prod);
+            $product = $this->handle($data);
 
-            if (!$this->handleIfStockFull($prod, $prodInfo)) {
-                DB::rollBack();
-                return response()->json(['message' => 'Stock adjustment failed. Maximum stock limit of 100 would be exceeded.'], 400);
-            }
-
-            if (!$this->handleIfStockNegative($prod, $prodInfo)) {
-                DB::rollBack();
-                return response()->json(['message' => 'Stock adjustment failed. Adjustment leads to negative stock.'], 400);
-            }
-            DB::commit();
-            $prod_fresh=$prod->fresh();
-            return response()->json($prod_fresh, 200);
-            
+            return response()->json($product, 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => 'Du bist nicht berechtigt, den Bestand dieses Produkts anzupassen.'
+            ], 403);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Das Produkt wurde nicht gefunden.'
+            ], 404);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Die Bestandsanpassung ist fehlgeschlagen.',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Stock adjustment failed: ' . $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Ein unerwarteter Serverfehler ist aufgetreten.',
+                'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
     }
 }

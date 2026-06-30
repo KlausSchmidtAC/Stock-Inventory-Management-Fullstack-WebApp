@@ -7,6 +7,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class CreateCategory
 {
@@ -18,17 +20,27 @@ class CreateCategory
      */
     public function handle(array $data): Category
     {
-        // Prüfe ob eine Kategorie mit gleichem Namen bereits existiert
-
-        $validated = validator($data, [
-        'name' => 'required|string|max:255',
-        ])->validate();
-
-
+         // Check authorization - only admin can create categories
         Gate::authorize('create', Category::class);
-        $existingCategory = Category::where('name', $data['name'])->first();
-        if ($existingCategory) {
-            throw new \Exception('Eine Kategorie mit dem Namen "' . $data['name'] . '" existiert bereits (ID: ' . $existingCategory->id . ').');
+
+        // Prüfe ob eine Kategorie mit gleichem Namen bereits existiert   
+        $validator = Validator::make(
+            ['categoryName' => $data['categoryName'] ?? null], 
+            [
+            'categoryName' => 'required|string|max:255|unique:categories,name',
+            ],
+        
+        [
+            'categoryName.required' => 'Bitte geben Sie einen Kategorienamen ein.',
+            'categoryName.string' => 'Kategoriename muss eine Zeichenkette sein.',
+            'categoryName.max' => 'Kategoriename darf nicht länger als 255 Zeichen sein.',
+            'categoryName.unique' => 'Eine Kategorie mit diesem Namen existiert bereits. ', ]);  // opt. Angabe der ID dieser Kategorie (ID: :id)
+        
+        $validated = $validator->validate();
+        $validated['name'] = $validated['categoryName'];
+
+        if(!$validated) {
+            throw ValidationException::withMessages($validator->errors()->toArray());
         }
         
         return Category::create($validated);
@@ -39,15 +51,8 @@ class CreateCategory
      */
     public function asController(Request $request): JsonResponse
     {
-        // Check authorization - only admin can create categories
-        Gate::authorize('create', Category::class);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-        ]);
-
-        $category = $this->handle($validated);
-
+        
+        $category = $this->handle($request->only(['categoryName']));
         return response()->json($category, 201);
     }
 }

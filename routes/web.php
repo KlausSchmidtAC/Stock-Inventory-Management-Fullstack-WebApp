@@ -29,7 +29,7 @@ Route::post('/logout', function (Request $request) {
     Auth::logout();                           // User ausloggen
     $request->session()->invalidate();        // Session löschen
     $request->session()->regenerateToken();   // CSRF-Token erneuern
-    
+
     return redirect('/');
 })->middleware('auth')->name('logout');
 
@@ -47,10 +47,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/category/{id}', GetProductsByCategory::class)->whereNumber('id')->name('products.byCategory');
     Route::get('/products/{id}', GetProduct::class)->whereNumber('id')->name('product.show');
     Route::get('/products/out-of-stock', GetOutOfStockProducts::class);
-    
+
     // Stock adjustment (all authenticated users)
     Route::post('/products/stockOperation', StockAdjustment::class);
-    
+
     // Admin/Manager only routes
     Route::middleware('role:admin,manager')->group(function () {
         Route::post('/products', CreateProduct::class);
@@ -74,4 +74,3 @@ Route::prefix('test')->middleware('test.admin')->group(function () {
     Route::delete('/products/{id}', DeleteProduct::class)->whereNumber('id');
 });
 */
-

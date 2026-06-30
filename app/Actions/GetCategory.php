@@ -6,54 +6,78 @@ use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 
 class GetCategory
 {
     use AsAction;
 
-    public function handle($categoryId): Category
+    public function handle(array $data): Collection
     {
-        // Validierung
-        $validated = validator(['categoryId' => $categoryId], [
-            'categoryId' => 'required|integer',
-        ])->validate();
+        $categoryId = $data['categoryId'] ?? null;
+        $categoryName = $data['categoryName'] ?? null;
 
-        try{
-        $category = Category::findOrFail($validated['categoryId']);
-        } 
-        catch(ModelNotFoundException $e){
-            throw new \Exception('Kategorie mit ID ' . $validated['categoryId'] . ' nicht gefunden.');
-        }
-        return $category;
+        $validator = Validator::make(
+            ['categoryId' => $categoryId, 'categoryName' => $categoryName],
+            [
+            'categoryId'   => 'required_without:categoryName|integer|nullable',
+            'categoryName' => 'required_without:categoryId|string|nullable',
+        ],
+        [
+            'categoryId.required_without' => 'Bitte geben Sie eine Kategorie-ID oder einen Kategorienamen ein.',
+            'categoryName.required_without' => 'Bitte geben Sie eine Kategorie-ID oder einen Kategorienamen ein.',
+            'categoryId.integer' => 'Kategorie-ID muss eine gültige Ganzzahl sein.',
+        ]
+    );
+
+    if ($validator->fails()) {
+        throw new ValidationException($validator);
+    }
+
+    $validated = $validator->validated();
+
+    
+    $category = Category::when($validated['categoryId'], function ($query, $id) {
+            return $query->where('id', $id);
+        }, function ($query) use ($validated) {
+            return $query->where('name', $validated['categoryName']);
+        })
+        ->first();
+
+
+    if (!$category) {
+        $searchKey = $validated['categoryId'] ?: $validated['categoryName'];
+        throw ValidationException::withMessages([
+            'categoryId' => ["Kategorie mit dem Wert '{$searchKey}' nicht gefunden."],
+        ]);
+    }
+
+    // Fall 2: Beide Werte wurden übergeben, passen aber nicht zusammen!
+    if ($validated['categoryId'] && $validated['categoryName'] && $category->name !== $validated['categoryName']) {
+        throw ValidationException::withMessages([
+            'categoryName' => ["Kategoriename '{$validated['categoryName']}' stimmt nicht mit der ID {$validated['categoryId']} überein. Gespeicherter Name: '{$category->name}'"],
+        ]);
+    }
+
+    $category->setAppends([]); 
+
+    $products = $category->products; 
+    if ($products->isEmpty()) {
+        throw ValidationException::withMessages([
+            'categoryId' => ["Keine Produkte in der Kategorie '{$category->name}' (ID: {$category->id}) gefunden."],
+        ]);
+    }
+
+    return $products; 
     }
     
-    public function handleByName($categoryName): Category
-    {
-        // Validierung
-        $validated = validator(['categoryName' => $categoryName], [
-            'categoryName' => 'required|string',
-        ])->validate();
 
-        $category = Category::where('name', $validated['categoryName'])->first();
-        
-        if (!$category) {
-            throw new \Exception('Kategorie mit Name "' . $validated['categoryName'] . '" existiert nicht.');
-        }
-        return $category;
-    }
-
-    public function asController(Request $request, int $id): JsonResponse
+    public function asController(Request $request, $categoryId, $categoryName = null): JsonResponse
     {
-        try{
-        $category = Category::findOrFail($id);
-        } 
-        catch(ModelNotFoundException $e){
-            return response()->json([
-                'error' => 'Kategorie nicht gefunden.',
-                'message' => 'Die Kategorie mit der ID ' . $id . ' existiert nicht.'
-            ], 404);
-        }
+        $category = $this->handle(['categoryId' => $categoryId, 'categoryName' => $categoryName]);
 
         return response()->json($category);
     }

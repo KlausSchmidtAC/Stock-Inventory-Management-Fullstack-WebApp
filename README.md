@@ -54,7 +54,7 @@ The Livewire controller maintains a lightweight lookup map binding frontend requ
 protected array \$actionMethodsMapping = [
     'get-product'      => 'handleGetProduct',
     'stock-adjustment' => 'handleStockAdjustment',
-    'create-product'   => 'handleCreateProduct',
+    'create-product'   => 'handleCreateProduct', ...
 ];
 ```
 
